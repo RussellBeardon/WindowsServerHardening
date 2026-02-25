@@ -1,0 +1,20 @@
+# PowerShell
+*.ps1xml
+*.psd1.bak
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*~
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+.vscode/settings.json

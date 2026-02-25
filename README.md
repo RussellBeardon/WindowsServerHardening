@@ -1,0 +1,83 @@
+# Harden-WindowsServer
+
+A PowerShell script for hardening Windows Server configurations aligned with CIS Benchmarks. Covers ~175 controls across 10 categories and supports audit-only mode, selective category exclusion, and optional registry backup before applying changes.
+
+**Supported OS:** Windows Server 2016, 2019, 2022 (build 14393+)
+
+**Requirements:** Must be run as Administrator.
+
+---
+
+## Usage
+
+```powershell
+# Audit current compliance without making changes
+.\Harden-WindowsServer.ps1 -ReportOnly
+
+# Harden with registry backup
+.\Harden-WindowsServer.ps1 -BackupRegistry
+
+# Skip specific categories
+.\Harden-WindowsServer.ps1 -ExcludeCategory 'TLS','Firewall'
+
+# Skip firewall changes (e.g. third-party firewall in use)
+.\Harden-WindowsServer.ps1 -SkipFirewall
+
+# Combine options
+.\Harden-WindowsServer.ps1 -BackupRegistry -ExcludeCategory 'TLS' -ReportOnly
+```
+
+---
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `-ReportOnly` | Switch | Audit-only mode — reports compliance status without making any changes |
+| `-LogPath` | String | Path to the log file. Defaults to a timestamped file in the script directory |
+| `-SkipFirewall` | Switch | Skip firewall profile changes (for environments using third-party firewalls) |
+| `-SkipServices` | Switch | Skip service disablement controls |
+| `-ExcludeCategory` | String[] | One or more category names to skip (see categories below) |
+| `-BackupRegistry` | Switch | Export `HKLM\SYSTEM` and `HKLM\SOFTWARE` before making changes |
+
+---
+
+## Categories
+
+| Category Name | CIS Section | Description |
+|---------------|-------------|-------------|
+| `AccountPolicies` | §1 | Password policy, lockout policy, Kerberos policy |
+| `LocalPolicies` | §2.3 | Security options (interactive logon, network access, UAC, etc.) |
+| `AuditPolicies` | §17 | Advanced audit policy (logon, account management, privilege use, etc.) |
+| `Services` | — | Disable unnecessary/risky Windows services |
+| `Firewall` | — | Windows Firewall profile settings (Domain, Private, Public) |
+| `TLS` | — | TLS/SSL protocol and cipher suite hardening |
+| `SMB` | — | SMB signing, SMBv1 disable, Null sessions |
+| `RDP` | — | RDP encryption, NLA requirement, idle timeouts |
+| `RegistryMisc` | — | Miscellaneous registry hardening (NTLMv2, LDAP, AutoRun, etc.) |
+| `Defender` | — | Windows Defender / antimalware settings |
+
+---
+
+## Output
+
+Each control produces one of the following statuses:
+
+| Status | Meaning |
+|--------|---------|
+| `PASS` | Control is already compliant |
+| `CHANGE` | Control was remediated |
+| `FAIL` | Control is non-compliant (in `-ReportOnly` mode) |
+| `SKIP` | Control was excluded via parameter |
+| `ERROR` | An error occurred while checking or applying the control |
+
+A compliance summary table is printed at the end, broken down by category with counts for each status. All output is also written to the log file.
+
+---
+
+## Notes
+
+- **Domain-joined servers:** The script warns if the server is domain-joined. On domain members, prefer Group Policy (GPO) for centralized management of these settings.
+- **Registry backup:** When `-BackupRegistry` is used, registry exports are saved to a timestamped folder (`RegistryBackup_YYYYMMDD_HHmmss`) in the script directory.
+- **Log files:** Logs are written to `HardenLog_YYYYMMDD_HHmmss.log` in the script directory unless `-LogPath` is specified.
+- **Idempotent:** Safe to run multiple times. Controls already at the expected value are logged as `PASS` and not modified.
