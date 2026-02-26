@@ -1,6 +1,6 @@
 # Harden-WindowsServer
 
-A PowerShell script for hardening Windows Server configurations aligned with CIS Benchmarks. Covers ~175 controls across 10 categories and supports audit-only mode, selective category exclusion, and optional registry backup before applying changes.
+A PowerShell script for hardening Windows Server configurations aligned with CIS Benchmarks. Covers ~160 controls across 9 categories and supports audit-only mode, selective category exclusion, and optional registry backup before applying changes.
 
 **Supported OS:** Windows Server 2016, 2019, 2022 (build 14393+)
 
@@ -53,7 +53,6 @@ A PowerShell script for hardening Windows Server configurations aligned with CIS
 | `Firewall` | — | Windows Firewall profile settings (Domain, Private, Public) |
 | `TLS` | — | TLS/SSL protocol and cipher suite hardening |
 | `SMB` | — | SMB signing, SMBv1 disable, Null sessions |
-| `RDP` | — | RDP encryption, NLA requirement, idle timeouts |
 | `RegistryMisc` | — | Miscellaneous registry hardening (NTLMv2, LDAP, AutoRun, etc.) |
 | `Defender` | — | Windows Defender / antimalware settings |
 
@@ -94,9 +93,6 @@ Some controls may disrupt existing functionality depending on the server's role 
 
 | Control | Category | What Breaks | Mitigation |
 |---------|----------|-------------|------------|
-| RDP drive redirection disabled (`fDisableCdm=1`) | `RDP` | Administrators and users cannot copy files to/from their local machine via RDP clipboard or drive mapping | Use `-ExcludeCategory RDP` if drive redirection is needed |
-| RDP disconnected session timeout: 1 minute | `RDP` | Any brief network disruption terminates the RDP session and all processes running in it | Consider adjusting `MaxDisconnectionTime` to 5–15 min for the environment |
-| Remote Assistance fully disabled | `RDP` | IT support staff cannot use Windows Remote Assistance for help sessions | Re-enable via Group Policy if Remote Assistance is part of the support workflow |
 | UAC standard users: automatically deny elevation | `LocalPolicies` | Standard users receive a silent failure when any app requests elevation — no credential prompt is shown | Expected CIS behaviour; ensure users understand they need an admin to install software |
 | WinRM Basic authentication disabled | `RegistryMisc` | Scripts, Ansible playbooks, or tools authenticating to WinRM with Basic auth will break | Migrate to Kerberos or certificate-based WinRM authentication |
 | Network credential storage disabled (`DisableDomainCreds=1`) | `LocalPolicies` | Saved credentials in Credential Manager for mapped drives and network resources are no longer stored; users are re-prompted every session | Acceptable on servers; may affect scheduled tasks using saved credentials |
