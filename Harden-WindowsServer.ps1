@@ -177,7 +177,7 @@ function Set-ServiceHarden {
         if ($svc.Status -eq 'Running' -and $StartupType -eq 'Disabled') {
             Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue
         }
-        Write-HardenLog "$id — Remediated ($ServiceName: $currentMapped → $StartupType)" -Status 'CHANGE'
+        Write-HardenLog "$id — Remediated (${ServiceName}: $currentMapped → $StartupType)" -Status 'CHANGE'
         $script:ChangeCount++
         $script:Results.Add([PSCustomObject]@{ Category=$Category; CIS=$CISRef; Control=$Description; Status='CHANGE'; Current=$currentMapped; Expected=$StartupType })
     }
@@ -227,7 +227,7 @@ function Set-AuditPolicyHarden {
         $result = & auditpol $auditArgs 2>&1
         if ($LASTEXITCODE -ne 0) { throw "auditpol failed: $result" }
 
-        Write-HardenLog "$id — Remediated ($Subcategory: $current → $Setting)" -Status 'CHANGE'
+        Write-HardenLog "$id — Remediated (${Subcategory}: $current → $Setting)" -Status 'CHANGE'
         $script:ChangeCount++
         $script:Results.Add([PSCustomObject]@{ Category=$Category; CIS=$CISRef; Control=$Description; Status='CHANGE'; Current=$current; Expected=$Setting })
     }
