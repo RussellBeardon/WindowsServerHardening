@@ -154,7 +154,7 @@ function Set-ServiceHarden {
             return
         }
 
-        $currentStartup = (Get-WmiObject Win32_Service -Filter "Name='$ServiceName'" -ErrorAction SilentlyContinue).StartMode
+        $currentStartup = (Get-CimInstance -ClassName Win32_Service -Filter "Name='$ServiceName'" -ErrorAction SilentlyContinue).StartMode
         # Map WMI start modes to PowerShell names
         $modeMap = @{ 'Auto'='Automatic'; 'Manual'='Manual'; 'Disabled'='Disabled' }
         $currentMapped = if ($modeMap.ContainsKey($currentStartup)) { $modeMap[$currentStartup] } else { $currentStartup }
@@ -321,11 +321,11 @@ function Get-ComplianceSummary {
 
     $categories = $script:Results | Group-Object Category
     $summaryTable = foreach ($cat in ($categories | Sort-Object Name)) {
-        $p = ($cat.Group | Where-Object Status -eq 'PASS').Count
-        $c = ($cat.Group | Where-Object Status -eq 'CHANGE').Count
-        $f = ($cat.Group | Where-Object Status -eq 'FAIL').Count
-        $s = ($cat.Group | Where-Object Status -eq 'SKIP').Count
-        $e = ($cat.Group | Where-Object Status -eq 'ERROR').Count
+        $p = @($cat.Group | Where-Object Status -eq 'PASS').Count
+        $c = @($cat.Group | Where-Object Status -eq 'CHANGE').Count
+        $f = @($cat.Group | Where-Object Status -eq 'FAIL').Count
+        $s = @($cat.Group | Where-Object Status -eq 'SKIP').Count
+        $e = @($cat.Group | Where-Object Status -eq 'ERROR').Count
         [PSCustomObject]@{
             Category = $cat.Name
             Total    = $cat.Count
