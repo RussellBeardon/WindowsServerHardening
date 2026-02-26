@@ -20,7 +20,7 @@
     Skip service disablement controls.
 
 .PARAMETER ExcludeCategory
-    Array of category names to exclude (e.g., 'TLS','SMB','Firewall','Services','RDP','Defender','AccountPolicies','AuditPolicies','LocalPolicies','RegistryMisc').
+    Array of category names to exclude (e.g., 'TLS','SMB','Firewall','Services','Defender','AccountPolicies','AuditPolicies','LocalPolicies','RegistryMisc').
 
 .PARAMETER BackupRegistry
     Export registry hives (HKLM\SYSTEM, HKLM\SOFTWARE) before making changes.
@@ -714,43 +714,6 @@ if (-not (Test-CategoryExcluded 'SMB')) {
 }
 
 # ═════════════════════════════════════════════════════════════════════════════
-# 8. RDP HARDENING
-# ═════════════════════════════════════════════════════════════════════════════
-if (-not (Test-CategoryExcluded 'RDP')) {
-    Write-HardenLog '── Category: RDP Hardening ──' -Status 'INFO'
-
-    $rdpBase = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'
-    $rdpSettings = @(
-        @{ Path=$rdpBase; Name='UserAuthentication'; Value=1; Type='DWord';
-           CISRef='18.9.65.3.9.1'; Description='Require NLA for Remote Desktop' }
-        @{ Path=$rdpBase; Name='SecurityLayer'; Value=2; Type='DWord';
-           CISRef='18.9.65.3.9.2'; Description='RDP: Require SSL security layer' }
-        @{ Path=$rdpBase; Name='MinEncryptionLevel'; Value=3; Type='DWord';
-           CISRef='18.9.65.3.9.3'; Description='RDP: Set client connection encryption level to High' }
-        @{ Path=$rdpBase; Name='MaxIdleTime'; Value=900000; Type='DWord';
-           CISRef='18.9.65.3.10.1'; Description='RDP: Set idle session timeout (15 min = 900000 ms)' }
-        @{ Path=$rdpBase; Name='MaxDisconnectionTime'; Value=60000; Type='DWord';
-           CISRef='18.9.65.3.10.2'; Description='RDP: Set disconnected session timeout (1 min = 60000 ms)' }
-        @{ Path=$rdpBase; Name='DeleteTempDirsOnExit'; Value=1; Type='DWord';
-           CISRef='18.9.65.3.11.1'; Description='RDP: Delete temp folders on exit' }
-        @{ Path=$rdpBase; Name='fDisableCdm'; Value=1; Type='DWord';
-           CISRef='18.9.65.3.3.2'; Description='RDP: Do not allow drive redirection' }
-        @{ Path='HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'; Name='fAllowUnsolicited'; Value=0; Type='DWord';
-           CISRef='18.9.65.2.1'; Description='Disable unsolicited Remote Assistance offers' }
-        @{ Path='HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'; Name='fAllowToGetHelp'; Value=0; Type='DWord';
-           CISRef='18.9.65.2.2'; Description='Disable solicited Remote Assistance' }
-        @{ Path=$rdpBase; Name='fEncryptRPCTraffic'; Value=1; Type='DWord';
-           CISRef='18.9.65.3.9.5'; Description='RDP: Require encryption for RPC traffic' }
-        @{ Path=$rdpBase; Name='KeepAliveInterval'; Value=1; Type='DWord';
-           CISRef='18.9.65.3.2'; Description='RDP: Keep-alive interval (1 min)' }
-    )
-
-    foreach ($setting in $rdpSettings) {
-        Set-RegistryHarden @setting -Category 'RDP'
-    }
-}
-
-# ═════════════════════════════════════════════════════════════════════════════
 # 9. REGISTRY MISC (CIS §18)
 # ═════════════════════════════════════════════════════════════════════════════
 if (-not (Test-CategoryExcluded 'RegistryMisc')) {
@@ -819,10 +782,7 @@ if (-not (Test-CategoryExcluded 'RegistryMisc')) {
         # SEHOP (Structured Exception Handler Overwrite Protection)
         @{ Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel'; Name='DisableExceptionChainValidation'; Value=0; Type='DWord';
            CISRef='18.3.4'; Description='Enable SEHOP (Structured Exception Handler Overwrite Protection)' }
-        # Remote Desktop connection solicitation
-        @{ Path='HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'; Name='fDenyTSConnections'; Value=0; Type='DWord';
-           CISRef='18.9.65.1'; Description='Allow RDP connections (manage via firewall)' }
-        # Disable Windows Search indexing of encrypted files
+# Disable Windows Search indexing of encrypted files
         @{ Path='HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search'; Name='AllowIndexingEncryptedStoresOrItems'; Value=0; Type='DWord';
            CISRef='18.9.67.3'; Description='Disable indexing of encrypted files' }
         # Credential Guard / Device Guard (if supported)
